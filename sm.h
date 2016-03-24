@@ -1,8 +1,7 @@
 /* To the extent possible under law, Tom Schouten has waived all
-   copyright and related or neighboring rights to SM.
+   copyright and related or neighboring rights to sm.h
    Code:    http://zwizwa.be/git/sm
-   License: CC0, http://creativecommons.org/publicdomain/zero/1.0
-*/
+   License: http://creativecommons.org/publicdomain/zero/1.0 */
 
 #ifndef SM_H
 #define SM_H
@@ -211,20 +210,25 @@
 
 
 /* Buffer abstraction. */
-struct sm_buf_u16 {
-    uint16_t *next;
-    uint16_t *endx;
+union sm_ptr {
+    uint8_t  *u8;
+    uint16_t *u16;
+    uint32_t *u32;
 };
-// same for u8, u32, ...
+struct sm_buf {
+    union sm_ptr next;
+    union sm_ptr endx;
+};
+
 
 /* Blocking write to buffer.  Write as long as there is room.
 
    Note that it is more efficient to iterate over the buffer on the
    writing side than to yield on every element. */
 
-#define SM_WAIT_BUF_WRITE(sm, smb, typ, data) do {    \
-        SM_WAIT(sm, (smb)->next < (smb)->endx);       \
-        *((smb)->next)++ = data; } while(0)
+#define SM_WAIT_BUF_WRITE(sm, smb, type, data) do {         \
+        SM_WAIT(sm, (smb)->next.type < (smb)->endx.type);   \
+        *((smb)->next.type)++ = (data); } while(0)
 
 /* If _tick() has been called, the machine is said to be active.
    Note that it can be in a halting state. */
